@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="../static/bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="../static/epoch/epoch.min.css">
+    <script src="http://code.jquery.com/jquery-git2.js" charset="utf-8"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="/static/epoch/epoch.min.js"></script>
+    <script src="/static/epoch/js/data.js"></script>
+
+    <style>
+        .eventList{
+            max-height: 350px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">
+        <p>The Load Average Demo</p>
+      </a>
+    </div>
+  </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Load Average for {{hostname}}</h3>
+            <div id="area" class="epoch category10" style="height: 200px;"></div>
+            <div id="real-time-area" class="epoch category10" style="height: 200px;"></div>
+        </div>
+        <div class="col-md-6">
+            <h3>Load Average Events for {{hostname}}</h3>
+            <div id="eventList" class="eventList">
+                <div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+$(function() {
+    var date = new Date();
+    var realTimeData = new RealTimeData(1); //[{values:[{time: date.getTime(), y:0}]}];
+    var data = [];
+
+    var chart;
+
+    $.ajax("/samples").done(function(samples){
+        data.push({values:samples});
+
+        chart = $('#area').epoch({
+            type: 'time.area',
+            data: data,
+            axes: ['left', 'bottom', 'right']
+        });
+    });
+
+    var eventList = d3.select("#eventList").selectAll("div");
+    console.log(eventList);
+
+
+    $.ajax("/samples/events/").done(function(events){
+        eventList.data(events)
+            .enter().append("div").classed("alert alert-danger", true).text(function(d){console.log(d.message); return d.message; });
+    });
+
+    setInterval(function() {
+        $.ajax("/samples/latest").done(function(sample){
+            chart.push([sample]);
+        });
+
+        $.ajax("/samples/events/").done(function(events){
+            eventList.data(events)
+            .enter().append("div").classed("alert alert-danger", true).text(function(d){console.log(d.message); return d.message; });
+
+            eventList.exit().remove();
+        });
+    }, 10000);
+
+
+});
+</script>
+
+</body>
+</html>
