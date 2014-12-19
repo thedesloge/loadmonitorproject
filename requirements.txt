@@ -1,0 +1,8 @@
+APScheduler==3.0.1
+Django==1.7.1
+djangorestframework==3.0.1
+futures==2.2.0
+pytz==2014.10
+six==1.8.0
+tzlocal==1.1.2
+wsgiref==0.1.2
